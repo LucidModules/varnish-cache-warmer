@@ -2,10 +2,15 @@ services:
   cache-warmer:
     build: .
     environment:
-      - VARNISH_BASE_URL=http://your-varnish-server:80
+      - VARNISH_BASE_URL=https://acme.com
       - GOMAXPROCS=2
-    restart: unless-stopped
+      - CACHE_URLS="/,/some-product.html,/catalogsearch/result/?q=test"
+    restart: no
     security_opt:
       - no-new-privileges:true
     read_only: true
     user: "1000:1000"
+    # Add DNS configuration for better name resolution
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1

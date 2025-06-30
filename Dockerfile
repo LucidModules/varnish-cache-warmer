@@ -10,7 +10,7 @@ COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o cache-warmer .
 
-FROM alpine:latest
+FROM alpine:latest as prod
 
 RUN apk --no-cache add ca-certificates
 

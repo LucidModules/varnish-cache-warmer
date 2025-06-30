@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -17,7 +18,8 @@ const (
 	retryDelay     = 2 * time.Second
 )
 
-var urlsToWarm = []string{
+// Default URLs if none provided via environment
+var defaultURLsToWarm = []string{
 	"/",
 	"/customer/account",
 	"/sofas.html",
@@ -36,7 +38,16 @@ func main() {
 		log.Fatal("VARNISH_BASE_URL environment variable is required")
 	}
 
+	varnishBaseURL = strings.TrimSuffix(varnishBaseURL, "/")
+
+	urlsToWarm := getURLsFromEnv()
+	if len(urlsToWarm) == 0 {
+		log.Println("No URLs specified via CACHE_URLS, using default URLs")
+		urlsToWarm = defaultURLsToWarm
+	}
+
 	log.Printf("Starting cache warming for %s", varnishBaseURL)
+	log.Printf("URLs to warm: %v", urlsToWarm)
 
 	if err := testConnectivity(varnishBaseURL); err != nil {
 		log.Fatalf("Cannot connect to Varnish: %v", err)
@@ -65,6 +76,29 @@ func main() {
 	log.Println("All URLs warmed successfully!")
 }
 
+func getURLsFromEnv() []string {
+	cacheURLs := os.Getenv("CACHE_URLS")
+	if cacheURLs == "" {
+		return nil
+	}
+
+	urls := strings.Split(cacheURLs, ",")
+	var cleanURLs []string
+	for _, url := range urls {
+		trimmed := strings.TrimSpace(url)
+		trimmed = strings.Trim(trimmed, "\"'")
+
+		if trimmed != "" {
+			if !strings.HasPrefix(trimmed, "/") {
+				trimmed = "/" + trimmed
+			}
+			cleanURLs = append(cleanURLs, trimmed)
+		}
+	}
+
+	return cleanURLs
+}
+
 func testConnectivity(baseURL string) error {
 	client := &http.Client{Timeout: 10 * time.Second}
 	req, err := http.NewRequest("GET", baseURL, nil)
@@ -78,11 +112,11 @@ func testConnectivity(baseURL string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	if resp.StatusCode >= 200 && resp.StatusCode < 400 {
+		return nil
 	}
 
-	return nil
+	return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 }
 
 func warmURLsConcurrently(baseURL string, urls []string) []WarmResult {
@@ -141,6 +175,7 @@ func worker(ctx context.Context, baseURL string, jobs <-chan string, results cha
 
 func warmURL(client *http.Client, baseURL, url string) WarmResult {
 	fullURL := baseURL + url
+	log.Printf("Warming URL: %s", fullURL)
 
 	for attempt := 1; attempt <= maxRetries; attempt++ {
 		req, err := http.NewRequest("GET", fullURL, nil)
@@ -176,8 +211,11 @@ func warmURL(client *http.Client, baseURL, url string) WarmResult {
 
 		resp.Body.Close()
 
-		if resp.StatusCode == http.StatusOK {
+		if resp.StatusCode >= 200 && resp.StatusCode < 400 {
 			cacheStatus := resp.Header.Get("X-Varnish-Cache")
+			if cacheStatus == "" {
+				cacheStatus = resp.Header.Get("X-Cache")
+			}
 			if cacheStatus == "" {
 				cacheStatus = "unknown"
 			}
