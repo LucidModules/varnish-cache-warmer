@@ -1,0 +1,6 @@
+.gitignore
+.git/
+
+.gitlab-ci.yml
+.tool-versions
+README.md

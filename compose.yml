@@ -1,0 +1,11 @@
+services:
+  cache-warmer:
+    build: .
+    environment:
+      - VARNISH_BASE_URL=http://your-varnish-server:80
+      - GOMAXPROCS=2
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    user: "1000:1000"
