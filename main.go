@@ -177,6 +177,8 @@ func warmURL(client *http.Client, baseURL, url string) WarmResult {
 	fullURL := baseURL + url
 	log.Printf("Warming URL: %s", fullURL)
 
+	hostHeader := os.Getenv("HOST_HEADER")
+
 	for attempt := 1; attempt <= maxRetries; attempt++ {
 		req, err := http.NewRequest("GET", fullURL, nil)
 		if err != nil {
@@ -194,6 +196,9 @@ func warmURL(client *http.Client, baseURL, url string) WarmResult {
 		req.Header.Set("User-Agent", "VarnishWarmer/1.0")
 		req.Header.Set("X-Cache-Warm", "true")
 		req.Header.Set("Cache-Control", "no-cache")
+		if hostHeader != "" {
+			req.Header.Set("Host", hostHeader)
+		}
 
 		resp, err := client.Do(req)
 		if err != nil {
