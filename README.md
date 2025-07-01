@@ -20,6 +20,7 @@ Set the following environment variable:
 - `CACHE_URLS`: Comma-separated list of URLs to warm (optional)
     - Example: `"/,/customer/account,/sofas.html,/catalog,/checkout"`
     - If not provided, uses default URLs: `/`, `/customer/account`
+- `HOST_HEADER`: optional, Host header submitted with the request
 
 ## Usage
 
