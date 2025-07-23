@@ -3,7 +3,7 @@ services:
     build: .
     environment:
       - VARNISH_BASE_URL=https://acme.com
-      - AUTHORIZATION="Basic dXNlcjpwYXNzd29yZAo="
+      - AUTHORIZATION_HEADER="Basic dXNlcjpwYXNzd29yZAo="
       - GOMAXPROCS=2
       - CACHE_URLS="/,/some-product.html,/catalogsearch/result/?q=test"
     restart: no

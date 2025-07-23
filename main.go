@@ -106,6 +106,12 @@ func testConnectivity(baseURL string) error {
 		return err
 	}
 
+	authorizationHeader := os.Getenv("AUTHORIZATION_HEADER")
+	if authorizationHeader != "" {
+		log.Printf("Using Authorization header for connectivity test")
+		req.Header.Set("Authorization", authorizationHeader)
+	}
+
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
@@ -201,6 +207,7 @@ func warmURL(client *http.Client, baseURL, url string) WarmResult {
 			req.Header.Set("Host", hostHeader)
 		}
 		if authorizationHeader != "" {
+			log.Printf("Using Authorization header")
 			req.Header.Set("Authorization", authorizationHeader)
 		}
 
