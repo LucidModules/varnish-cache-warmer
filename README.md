@@ -21,6 +21,9 @@ Set the following environment variable:
     - Example: `"/,/customer/account,/sofas.html,/catalog,/checkout"`
     - If not provided, uses default URLs: `/`, `/customer/account`
 - `HOST_HEADER`: optional, Host header submitted with the request
+- `AUTHORIZATION_HEADER`: optional, Authorization header submitted with the request
+    - Example: `"Basic dXNlcm5hbWU6cGFzc3dvcmQ="` (for Basic authentication with base64 encoded "username:password")
+    - Example: `"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."` (for JWT token authentication)
 
 ## Usage
 

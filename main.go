@@ -178,6 +178,7 @@ func warmURL(client *http.Client, baseURL, url string) WarmResult {
 	log.Printf("Warming URL: %s", fullURL)
 
 	hostHeader := os.Getenv("HOST_HEADER")
+	authorizationHeader := os.Getenv("AUTHORIZATION_HEADER")
 
 	for attempt := 1; attempt <= maxRetries; attempt++ {
 		req, err := http.NewRequest("GET", fullURL, nil)
@@ -198,6 +199,9 @@ func warmURL(client *http.Client, baseURL, url string) WarmResult {
 		req.Header.Set("Cache-Control", "no-cache")
 		if hostHeader != "" {
 			req.Header.Set("Host", hostHeader)
+		}
+		if authorizationHeader != "" {
+			req.Header.Set("Authorization", authorizationHeader)
 		}
 
 		resp, err := client.Do(req)
